@@ -149,7 +149,7 @@ def get_stats():
 if __name__ == '__main__':
     # Use a production-grade WSGI server instead of Flask's built-in server
     # For testing, you can still use Flask:
-    app.run(threaded=True, processes=4, host='0.0.0.0', port=5000)
+    app.run(threaded=True, host='0.0.0.0', port=5000)
     
     # Clean shutdown
     for _ in range(NUM_WORKER_THREADS):
