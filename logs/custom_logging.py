@@ -88,7 +88,7 @@ def setup_logging(
     log_file: str = "scraper.log",
     console_level: int = logging.INFO, # Default level for console output
     file_level: int = logging.DEBUG,    # Default level for file output
-    save_log: bool = True,
+    save_log: bool = False,
     log_dir: str = r"Logs\General_Logs" # Default log directory
 ) -> logging.Logger:
     """
@@ -140,7 +140,7 @@ def setup_logging(
                 logger.addHandler(file_handler)
             except Exception as e:
                 # Log error if file handler setup fails, but continue with console logging
-                logger.error(f"Failed to set up file logging to {log_file_path}: {e}", exc_info=True)
+                logger.error(f"Failed to set up file logging: {e}", exc_info=True)
                 # Optionally, you could remove the failed handler if added partially,
                 # but basic addHandler failures are less common than I/O errors later.
 
