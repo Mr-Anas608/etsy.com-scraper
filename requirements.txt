@@ -1,4 +1,4 @@
-flask
+Flask[async]
 bs4
 httpx
 fake-useragent
