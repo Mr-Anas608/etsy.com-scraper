@@ -4,3 +4,4 @@ httpx
 fake-useragent
 gunicorn
 lxml
+aiohttp
