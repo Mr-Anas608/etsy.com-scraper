@@ -146,6 +146,11 @@ def get_stats():
         "cpu_count": CPU_COUNT
     })
 
+@app.route('/test_async')
+async def test_async():
+    await asyncio.sleep(5)  # Simulate a 5-second I/O operation
+    return jsonify({"message": "Async test complete"}), 200
+
 if __name__ == '__main__':
     # Use a production-grade WSGI server instead of Flask's built-in server
     # For testing, you can still use Flask:
