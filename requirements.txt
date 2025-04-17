@@ -1,7 +1,8 @@
-Flask[async]
+fastapi[standard]
 bs4
 httpx
 fake-useragent
 gunicorn
+uvicorn 
 lxml
 aiohttp
