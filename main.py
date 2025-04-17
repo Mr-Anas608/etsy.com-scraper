@@ -20,11 +20,8 @@ def handle_category():
         # Create instance of the scraper
         scraper = EtsyCategoryScraper(url=url, proxy=proxy, timeout=timeout)
 
-        # Run async scraping task in Flask (via asyncio loop)
-        # loop = asyncio.new_event_loop()
-        # asyncio.set_event_loop(loop)
-        # result = loop.run_until_complete(scraper.etsy_category_scraper())
-        result = scraper.etsy_category_scraper()
+        # Run async scraping task in Flask (using asyncio.run)
+        result = asyncio.run(scraper.etsy_category_scraper())
 
         return jsonify(result), 200
 
