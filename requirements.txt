@@ -2,5 +2,5 @@ flask
 bs4
 httpx
 fake-useragent
-gunicorn
+uvicorn
 lxml
