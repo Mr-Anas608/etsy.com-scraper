@@ -1,23 +1,32 @@
-from fastapi import FastAPI, HTTPException, Body
+from flask import Flask, request, jsonify
 import asyncio
 from scrapers.category_scraper import EtsyCategoryScraper
 
-app = FastAPI()
+app = Flask(__name__)
 
-@app.post("/category")
-async def handle_category(data: dict = Body(...)):
+@app.route('/category', methods=['POST'])
+def handle_category():
     try:
+        # Get input JSON
+        data = request.get_json()
         url = data.get('url')
-        proxy = data.get('proxy')
+        proxy = data.get('proxy', None)
         timeout = data.get('timeout', 10)
 
+        # Validate input
         if not url:
-            raise HTTPException(status_code=400, detail="Missing 'url' field")
+            return jsonify({"error": "Missing 'url' field"}), 400
 
+        # Create instance of the scraper
         scraper = EtsyCategoryScraper(url=url, proxy=proxy, timeout=timeout)
-        result = await scraper.etsy_category_scraper()  # Use 'await' here
 
-        return result
+        # Run async scraping task in Flask (using asyncio.run)
+        result = asyncio.run(scraper.etsy_category_scraper())
+
+        return jsonify(result), 200
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+if __name__ == '__main__':
+    app.run(threaded=True)
