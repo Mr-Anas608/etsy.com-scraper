@@ -1,0 +1,4 @@
+flask
+bs4
+httpx
+fake-useragent
