@@ -35,20 +35,29 @@
 
 
 
+# main.py
 from fastapi import FastAPI
 import asyncio
+import random
 
 app = FastAPI()
 
-# Example async scraper function
-async def async_scrape(url: str):
-    # Use async HTTP client (e.g., aiohttp) here
-    await asyncio.sleep(5)  # Simulate async I/O operation
+async def realistic_scraper_simulation():
+    # Simulate variable latency (5s ± random delay)
+    delay = 5 + random.uniform(-1.5, 2.5)  # 3.5s-7.5s range
+    await asyncio.sleep(delay)
+    
+    # Simulate occasional errors (5% error rate)
+    if random.random() < 0.05:
+        raise ValueError("Simulated scraping error")
+    
     return {"data": "scraped_data"}
 
 @app.get("/scraper1")
 async def scraper1():
-    result = await async_scrape("https://example.com")
-    return result
-
+    try:
+        result = await realistic_scraper_simulation()
+        return result
+    except Exception as e:
+        return {"error": str(e)}
 # Add similar endpoints for scraper2 and scraper3
