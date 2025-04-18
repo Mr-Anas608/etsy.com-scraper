@@ -152,7 +152,7 @@ class EtsyCategoryScraper:
         try:
             html_content, error_message = await self.fetch_page()
             if error_message:
-                self.logger.error("⚠️ Skipping parsing due to fetch error.")
+                self.logger.error("⚠️ Skipping parsing due to fetch error. Error: " + error_message)
                 return {
                     "category_tree": None,
                     "category_name": None,

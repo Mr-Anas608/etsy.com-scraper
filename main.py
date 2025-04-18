@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from scrapers.category_scraper import EtsyCategoryScraper  # Import your real scraper
-import asyncio
+from scrapers.product_scraper import EtsyProductScraper
 
 app = FastAPI()
 
@@ -22,5 +22,14 @@ async def category_scraper(request: Request):
         result = await scraper.etsy_category_scraper()
         return result
 
+    except Exception as e:
+        return {"error": f"Server error: {str(e)}"}
+    
+@app.get("/sb-test")
+async def sb_test():
+    try:
+        scraper = EtsyProductScraper()
+        result = await scraper.sb_test()
+        return {"result": result}
     except Exception as e:
         return {"error": f"Server error: {str(e)}"}

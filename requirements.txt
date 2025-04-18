@@ -6,3 +6,6 @@ gunicorn
 uvicorn 
 lxml
 aiohttp
+seleniumbase
+crawl4ai
+playwright
