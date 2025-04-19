@@ -1,5 +1,4 @@
 fastapi[standard]
-bs4
 httpx
 fake-useragent
 gunicorn
@@ -7,5 +6,4 @@ uvicorn
 lxml
 aiohttp
 seleniumbase
-crawl4ai
-playwright
+parsel

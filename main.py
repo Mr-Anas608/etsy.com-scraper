@@ -34,14 +34,6 @@ async def sb_test():
     except Exception as e:
         return {"error": f"Server error: {str(e)}"}
     
-@app.get("/chrome-version")
-async def check_chrome():
-    try:
-        from seleniumbase import get_driver
-        driver = get_driver()
-        driver.get("chrome://version/")
-        version_text = driver.find_element("tag name", "body").text
-        driver.quit()
-        return {"status": "success", "version": version_text}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
+@app.get("/")
+def root():
+    return {"message": "Welcome to the Etsy Scraper API!"}

@@ -16,9 +16,6 @@ from lxml import html
 from dataclasses import dataclass
 from seleniumbase import SB
 import asyncio
-from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
-
-
 @dataclass
 class EtsyCategoryKeys:
     category_tree = ""
@@ -93,7 +90,6 @@ class EtsyProductScraper:
         chromium_arg="--no-sandbox --disable-dev-shm-usage --disable-gpu",
         binary_location="/usr/bin/google-chrome",
         page_load_strategy="eager",
-        timeout=30
         ) as sb:
             sb.open("https://www.etsy.com/uk/listing/1583875617/family-and-couple-annual-budget-google?ref=landingpage_similar_listing_bot-1&pro=1&sts=1&listing_id=1583875617&listing_slug=family-and-couple-annual-budget-google&logging_key=cac5e902bc9a84971f59bffc3fd67c092b91d3ce%3A1583875617")
             sb.sleep(2)
@@ -101,13 +97,6 @@ class EtsyProductScraper:
 
         return page_source
 
-    async def cr_test(self) -> str:
-            # Create an instance of AsyncWebCrawler
-            async with AsyncWebCrawler(config=BrowserConfig(headless=True)) as crawler:
-                # Run the crawler on a URL
-                result = await crawler.arun(url="https://www.etsy.com/uk/listing/1583875617/family-and-couple-annual-budget-google?ref=landingpage_similar_listing_bot-1&pro=1&sts=1&listing_id=1583875617&listing_slug=family-and-couple-annual-budget-google&logging_key=cac5e902bc9a84971f59bffc3fd67c092b91d3ce%3A1583875617")
-            
-            return result.html
         
 if __name__ == "__main__":
     scraper = EtsyProductScraper()
