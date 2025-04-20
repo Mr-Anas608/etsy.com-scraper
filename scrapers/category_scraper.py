@@ -41,7 +41,7 @@ class EtsyCategoryScraper:
     async def fetch_page(self) -> Optional[str]:
         try:
             self.logger.info("🌐 Fetching HTML content from Etsy category page...")
-            async with httpx.AsyncClient(headers=self.headers, timeout=self.timeout, follow_redirects=True) as client:
+            async with httpx.AsyncClient(headers=self.headers, timeout=self.timeout, follow_redirects=True, proxy=self.proxy) as client:
                 response = await client.get(self.url)
                 response.raise_for_status()
                 self.logger.info(f"✅ Page fetched successfully with status: {response.status_code}")
@@ -126,7 +126,7 @@ class EtsyCategoryScraper:
                 elif words:
                     store_name = words[-1]
 
-            store_url = f"https://www.etsy.com/uk/shop/{store_name}" if store_name else None
+            store_url = f"https://www.etsy.com/shop/{store_name}" if store_name else None
             star_seller = "Star Seller" in str(card)
 
             self.logger.debug(f"🛍️ Parsed Product: {product_name} (ID: {product_id})")
@@ -147,19 +147,20 @@ class EtsyCategoryScraper:
             self.logger.debug(f"❌ Failed to parse product card: {e}")
             return None
 
-    async def etsy_category_scraper(self) -> dict:
+    async def etsy_category_scraper(self, html_content:str = False) -> dict:
         self.logger.info("🚀 Starting Etsy category scrape...")
         try:
-            html_content, error_message = await self.fetch_page()
-            if error_message:
-                self.logger.error("⚠️ Skipping parsing due to fetch error. Error: " + error_message)
-                return {
-                    "category_tree": None,
-                    "category_name": None,
-                    "products": [],
-                    "search_url": self.url,
-                    "error": error_message
-                }
+            if not html_content:
+                html_content, error_message = await self.fetch_page()
+                if error_message:
+                    self.logger.error("⚠️ Skipping parsing due to fetch error. Error: " + error_message)
+                    return {
+                        "category_tree": None,
+                        "category_name": None,
+                        "products": [],
+                        "search_url": self.url,
+                        "error": error_message
+                    }
 
             soup = BeautifulSoup(html_content, "html.parser")
             category_tree, category_name = await self.extract_category_tree_from_url(self.url)

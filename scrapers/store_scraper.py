@@ -115,7 +115,7 @@ class EtsyStoreConfig:
             return None, e
 
 class EtsyStoreScraper:
-    def __init__(self, url: str, proxy: Optional[str] = False, timeout: int = 10):
+    def __init__(self, url: str = None, proxy: Optional[str] = False, timeout: int = 10):
         self.logger = setup_logging()
         self.url = url
         self.proxy = proxy
@@ -147,7 +147,7 @@ class EtsyStoreScraper:
         try:
             self.logger.info("🌐 Fetching HTML content from Etsy Store page...")
         
-            async with httpx.AsyncClient(headers=self.headers, timeout=self.timeout, follow_redirects=True) as client:
+            async with httpx.AsyncClient(headers=self.headers, timeout=self.timeout, follow_redirects=True, proxy=self.proxy) as client:
                 response = await client.get(self.url)
                 if response.text:
                     self.logger.debug(f"✅ Page fetched successfully. Response len = {len(response.text)} char.")
