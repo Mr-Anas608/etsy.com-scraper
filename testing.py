@@ -3,7 +3,7 @@ import aiohttp
 import time
 import json
 from collections import defaultdict
-from tqdm import tqdm
+# from tqdm import tqdm
 from aiohttp import TCPConnector
 
 # 📡 Your FastAPI deployed endpoint
@@ -116,5 +116,18 @@ async def main():
             f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 if __name__ == "__main__":
-    print(f"\n🌐 Starting load test for {len(URLS)} URLs")
-    asyncio.run(main())
+    # print(f"\n🌐 Starting load test for {len(URLS)} URLs")
+    # asyncio.run(main())
+
+    import requests
+    import pprint
+    
+    url = "http://127.0.0.1:8000/store"  # URL without query parameters
+    payload = {  # Data to send in the request body as JSON
+        "url": "https://www.etsy.com/uk/shop/PrioriDigitalStudio?ref=l2-about-shopname&from_page=listing",
+    }
+
+    req = requests.post(url, data=json.dumps(payload))
+    print(req.status_code)
+    pprint.pprint(req.text)
+    
