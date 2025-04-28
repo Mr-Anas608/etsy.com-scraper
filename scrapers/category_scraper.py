@@ -5,59 +5,72 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from logs.custom_logging import setup_logging 
 import logging
+from utils.helpers import Helpers
 
-import httpx
-from bs4 import BeautifulSoup
+from parsel import Selector
 import re
 from typing import Optional, List, Tuple, Dict, Any
 import asyncio
 import json
 from lxml import html
+from dataclasses import dataclass
+
+
+@dataclass
+class EtsyCategoryConfig:
+    category_tree = ""
+    category_name = ""
+    products = []
+    search_url = ""
+
+    # Helper function to return data in form of Dict
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "category_tree": self.category_tree,
+            "category_name": self.category_name,
+            "products": self.products,
+            "search_url": self.search_url
+        }
+
+@dataclass
+class EtsyProductCardConfig:
+    product_id = ""
+    product_name = ""
+    product_url = ""
+    store_review_score = ""
+    store_reviews_number = ""
+    star_seller = ""
+    store_name = ""
+    store_url = ""
+    is_ad = ""
+
+    # Helper function to return data in form of Dict
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "product_name": self.product_name,
+            "product_url": self.product_url,
+            "product_id": self.product_id,
+            "store_review_score": self.store_review_score,
+            "store_reviews_number": self.store_reviews_number,
+            "star_seller": self.star_seller,
+            "store_name": self.store_name,
+            "store_url": self.store_url,
+            "is_ad": self.is_ad
+        }
+
 
 
 class EtsyCategoryScraper:
-    def __init__(self, url: str, proxy: Optional[str] = None, timeout: int = 5):
+    def __init__(self, url: str = None, proxy: Optional[str] = None, timeout: int = 5):
         self.logger = setup_logging(console_level=logging.DEBUG)
         self.url = url
         self.proxy = proxy
         self.timeout = timeout
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1',
-            'Pragma': 'no-cache',
-            'Cache-Control': 'no-cache',
-        }
+        self.store_data = EtsyCategoryConfig()
+        self.helpers = Helpers(url=url, proxy=proxy, timeout=timeout)
 
         self.logger.info(f"🔎 Initialized scraper with URL: {url}")
 
-    async def fetch_page(self) -> Optional[str]:
-        try:
-            self.logger.info("🌐 Fetching HTML content from Etsy category page...")
-            async with httpx.AsyncClient(headers=self.headers, timeout=self.timeout, follow_redirects=True, proxy=self.proxy) as client:
-                response = await client.get(self.url)
-                response.raise_for_status()
-                self.logger.info(f"✅ Page fetched successfully with status: {response.status_code}")
-                return response.text, None
-        except httpx.RequestError as exc:
-            error_message = f"❌ Network error at {exc.request.url}: {exc}"
-            self.logger.error(error_message)
-            return None, error_message
-        except httpx.HTTPStatusError as exc:
-            error_message = f"❌ HTTP error {exc.response.status_code} at {exc.request.url}"
-            self.logger.error(error_message)
-            return None, error_message
-        except Exception as exc:
-            error_message = f"❌ Unexpected error during fetch: {exc}"
-            self.logger.error(error_message)
-            return None, error_message
 
     async def extract_category_tree_from_url(self, url: str) -> Tuple[Optional[str], Optional[str]]:
         try:
@@ -78,70 +91,91 @@ class EtsyCategoryScraper:
             self.logger.error(error_message)
             return None, None
 
-    async def parse_product_card(self, card: BeautifulSoup) -> Optional[Dict[str, Any]]:
+    async def parse_product_card(self, card_selector: Selector) -> Optional[Dict[str, Any]]:
         try:
-            tree = html.fromstring(str(card))
 
-            product_id = card.get('data-listing-id') or (
-                tree.xpath(".//a[@data-listing-id]/@data-listing-id")[0].strip()
-                if tree.xpath(".//a[@data-listing-id]/@data-listing-id") else None
-            )
-            if not product_id:
-                self.logger.debug("⛔ Skipping card: No product ID found.")
-                return None
+            store_card_info = EtsyProductCardConfig()
 
-            title_tag = card.select_one("h3.v2-listing-card__title")
-            product_name = title_tag.get_text(strip=True) if title_tag else (
-                tree.xpath("//h3/text()")[0].strip()
-                if tree.xpath("//h3/text()") else None
-            )
+            #--Product ID Extraction--
+            try:
+                store_card_info.product_id = (
+                    card_selector.css('a[class*="listing-link"]::attr("data-listing-id")').get() 
+                    or card_selector.xpath('.//div[contains(@class, "js-merch-stash-check-listing v2-listing-card")]/@data-palette-listing-id').get()
+                ).strip()
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error parsing product_id: {e}")
 
-            link_tag = card.select_one("a.listing-link")
-            product_url = link_tag["href"] if link_tag else (
-                tree.xpath(".//a[@data-listing-id]/@href")[0].strip()
-                if tree.xpath(".//a[@data-listing-id]/@href") else None
-            )
 
-            rating_input = card.select_one("input[name='rating']")
-            store_review_score = float(rating_input.get('value')) if rating_input and rating_input.get('value') else None
+           # --Product Name Extraction--
+            try:
+                store_card_info.product_name = (
+                    card_selector.css('h3::text').get()
+                    or card_selector.xpath('.//h3[contains(@class, "v2-listing-card__title")]/text()').get()
+                ).strip()
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error parsing product_name: {e}")
 
-            store_reviews_number = None
-            review_count_tag = card.select_one("span.wt-text-gray.wt-display-inline-block")
-            if review_count_tag:
-                match = re.search(r'\(([\d,]+)\)', review_count_tag.get_text(strip=True))
-                if match:
-                    store_reviews_number = int(match.group(1).replace(',', ''))
 
-            store_name = None
-            is_ad = False
-            seller_info_p = card.select_one("p.wt-text-caption.wt-mb-xs-1")
-            if seller_info_p:
-                words = re.split(r'\s+', seller_info_p.get_text(strip=True))
-                if "ad" in words and "by" in words:
-                    is_ad = True
-                    try:
-                        store_name = words[words.index("by") + 1]
-                    except Exception:
-                        pass
-                elif words:
-                    store_name = words[-1]
+            # --Product URL Extraction--
+            try:
+                store_card_info.product_url = (
+                    card_selector.css('a[class*="listing-link"]::attr("href")').get()
+                    or card_selector.xpath(f'.//a[contains(@data-listing-id, "{store_card_info.product_id}")]').get()
+                ).split('?')[0].strip()
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error parsing product_url: {e}")
 
-            store_url = f"https://www.etsy.com/shop/{store_name}" if store_name else None
-            star_seller = "Star Seller" in str(card)
+            # --Store Review Score Extraction--
+            try:
+                store_review_score = (
+                    card_selector.css('input[name="rating"]::attr("value")').get()
+                    or card_selector.xpath('.//input[@name="initial-rating"]/@value').get()
+                )
+                store_card_info.store_review_score = float(store_review_score) if store_review_score else None
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error parsing store_review_score: {e}")<e
+            
 
-            self.logger.debug(f"🛍️ Parsed Product: {product_name} (ID: {product_id})")
+            # --Store Reviews Number Extraction--
+            try:
+                store_reviews_number = (
+                    card_selector.xpath('.//span[contains(@class, "wt-text-gray wt-display-inline-block")]').re(r'\(([\d, ]+)\)')
+                )
+                if store_reviews_number:
+                    clean_number = store_reviews_number[0].replace(',', '').strip()
+                    store_card_info.store_reviews_number = int(clean_number) if clean_number else None
+                
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error parsing store_reviews_number: {e}")
+          
 
-            return {
-                "product_name": product_name,
-                "product_url": product_url,
-                "product_id": product_id,
-                "store_review_score": store_review_score,
-                "store_reviews_number": store_reviews_number,
-                "star_seller": star_seller,
-                "store_name": store_name,
-                "store_url": store_url,
-                "is_ad": is_ad
-            }
+            # --Store Name Extraction--
+            try:
+                text = (
+                    card_selector.xpath('.//div[contains(@class, "v2-listing-card__info")]/p//span[contains(text(), "From shop")]//text()').get()
+                )
+                if text:
+                    store_card_info.store_name = text.split('From shop')[1].strip()
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error parsing store_name: {e}")
+            print("Store Name: ",text)
+            
+
+            # --Is Ad Detection--
+            try:
+                store_card_info.is_ad = bool(
+                    card_selector.xpath('.//div[contains(@class, "v2-listing-card__info")]/p//span[contains(@class, "wt-screen-reader-only") and not(@aria-hidden="true") and contains(text(), "Ad")]//text()').get()
+                )
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error parsing is_ad: {e}")
+
+    
+            store_card_info.store_url = f"https://www.etsy.com/shop/{store_card_info.store_name}" if store_card_info.store_name else None
+            store_card_info.star_seller = "Star Seller" in str(card_selector)
+
+            # self.logger.debug(f"🛍️ Parsed Product: {product_name} (ID: {product_id})")
+
+            return store_card_info.to_dict()
 
         except Exception as e:
             self.logger.debug(f"❌ Failed to parse product card: {e}")
@@ -151,7 +185,7 @@ class EtsyCategoryScraper:
         self.logger.info("🚀 Starting Etsy category scrape...")
         try:
             if not html_content:
-                html_content, error_message = await self.fetch_page()
+                html_content, error_message = await self.helpers.fetch_page()
                 if error_message:
                     self.logger.error("⚠️ Skipping parsing due to fetch error. Error: " + error_message)
                     return {
@@ -161,25 +195,26 @@ class EtsyCategoryScraper:
                         "search_url": self.url,
                         "error": error_message
                     }
+                
+            selector = Selector(text=html_content)
 
-            soup = BeautifulSoup(html_content, "html.parser")
-            category_tree, category_name = await self.extract_category_tree_from_url(self.url)
+            # Deal these 2 values separate to extract information from URLs
+            self.store_data.category_tree, self.store_data.category_name = await self.extract_category_tree_from_url(self.url)
 
-            product_cards = soup.select("div.v2-listing-card")
+            product_cards = (
+                selector.xpath('.//div[@data-search-results]//ul//li')
+                or selector.css('div[data-page-type="category"]')
+            )
+
             self.logger.info(f"🧩 Found {len(product_cards)} product cards")
 
             parse_tasks = [self.parse_product_card(card) for card in product_cards]
             parsed_products = await asyncio.gather(*parse_tasks)
-            products = [p for p in parsed_products if p]
+            self.store_data.products = [p for p in parsed_products if p]
 
-            self.logger.info(f"✅ Parsed {len(products)} valid products.")
+            self.logger.info(f"✅ Parsed {len(self.store_data.products)} valid products.")
 
-            return {
-                "category_tree": category_tree,
-                "category_name": category_name,
-                "products": products,
-                "search_url": self.url
-            }
+            return self.store_data.to_dict()
 
         except Exception as e:
             self.logger.error(f"❌ Critical error during category scraping: {str(e)}")
@@ -193,14 +228,16 @@ if __name__ == "__main__":
     logger = setup_logging(console_level=logging.DEBUG)
 
     # 🧪 Test URL (can replace with any Etsy category)
-    url = "https://www.etsy.com/uk/c/jewelry?explicit=1&instant_download=true&ship_to=GB&order=highest_reviews&page=8"
+    url = "https://www.etsy.com/c/jewelry?explicit=1&instant_download=true&ship_to=GB&order=highest_reviews&page=2"
 
     logger.info("🔬 Starting standalone test for EtsyCategoryScraper...")
 
     try:
         start_time = time.time()
 
-        scraper = EtsyCategoryScraper(url, proxy=None, timeout=10)
+        # scraper = EtsyCategoryScraper(url, proxy=None, timeout=10)
+        scraper = EtsyCategoryScraper(url=url)
+
         result = asyncio.run(scraper.etsy_category_scraper())
 
         end_time = time.time()

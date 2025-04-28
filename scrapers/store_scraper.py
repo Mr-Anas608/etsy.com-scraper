@@ -6,6 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from logs.custom_logging import setup_logging 
 import logging
+from utils.helpers import Helpers
 
 import httpx
 from parsel import Selector
@@ -120,55 +121,7 @@ class EtsyStoreScraper:
         self.url = url
         self.proxy = proxy
         self.timeout = timeout
-        self.headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        # 'Accept-Encoding': 'gzip, deflate, br, zstd',
-        'DNT': '1',
-        'Sec-GPC': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'none',
-        'Sec-Fetch-User': '?1',
-        'Priority': 'u=0, i',
-        'Pragma': 'no-cache',
-        'Cache-Control': 'no-cache',
-    }
-
-    # params = {
-    #     'ref': 'l2-about-shopname',
-    #     'from_page': 'listing',
-    # }
-
-    async def fetch_page(self) -> Optional[str]:
-        try:
-            self.logger.info("🌐 Fetching HTML content from Etsy Store page...")
-        
-            async with httpx.AsyncClient(headers=self.headers, timeout=self.timeout, follow_redirects=True, proxy=self.proxy) as client:
-                response = await client.get(self.url)
-                if response.text:
-                    self.logger.debug(f"✅ Page fetched successfully. Response len = {len(response.text)} char.")
-                else:
-                    self.logger.error(f"❌ Failed to fetch page content. Response = {response.text}")
-                response.raise_for_status()
-                print(response.status_code)
-                self.logger.info(f"✅ Page fetched successfully with status: {response.status_code}")
-                return response.text, None
-        except httpx.RequestError as exc:
-            error_message = f"❌ Network error at {exc.request.url}: {exc}"
-            self.logger.error(error_message)
-            return None, error_message
-        except httpx.HTTPStatusError as exc:
-            error_message = f"❌ HTTP error {exc.response.status_code} at {exc.request.url}"
-            self.logger.error(error_message)
-            return None, error_message
-        except Exception as exc:
-            error_message = f"❌ Unexpected error during fetch: {exc}"
-            self.logger.error(error_message)
-            return None, error_message
+        self.helpers = Helpers(url=url, proxy=proxy, timeout=timeout)
 
 
     async def parse_store_page(self, store_page_html: str) -> Optional[Dict[str, Any]]:
@@ -186,32 +139,30 @@ class EtsyStoreScraper:
             # Some Tags that have inside have may useful information about the store
 
             # Tag1: Json Script tag, for storing good quality logo url, and other fallback options if available
-            store_info_script_tag = selector.xpath("//script[@type='application/ld+json' and contains(text(), '\"@type\":\"OnlineStore\"')]/text()")
+            store_info_script_tag = selector.xpath(".//script[@type='application/ld+json' and contains(text(), '\"@type\":\"OnlineStore\"')]/text()")
 
             # Tag2: Json Script tag, for storing 1st page product urls
-            store_products_script_tag = selector.xpath("//script[@type='application/ld+json' and contains(text(), '\"@type\":\"ItemList\"')]/text()")
+            store_products_script_tag = selector.xpath(".//script[@type='application/ld+json' and contains(text(), '\"@type\":\"ItemList\"')]/text()")
 
 
             #Tag3: A store header container in html
             shop_header = (
                 selector.css('div[class*="shop-home-header-container"]') 
-                or selector.xpath('//div[contains(@class,"trust-signals")]/div/div')
+                or selector.xpath('.//div[contains(@class,"trust-signals")]/div/div')
             )
 
             # Tag4: Section for description and last updated
             announcement_section = (
                 selector.css('div[class*= "announcement-section"]')
-                or selector.xpath('//h2[contains(. ,"Announcement" )]/../..')
+                or selector.xpath('.//h2[contains(. ,"Announcement" )]/../..')
             )
 
             # Tag5 Section for social links, Welcome to our shop! & on_etsy_since etx, 
             shop_home_about_section = (
                 selector.css('div[data-appears-component-name="shop_home_about_section"]')
-                or selector.xpath('//div[contains(@class, "anchor about-section")]')
+                or selector.xpath('.//div[contains(@class, "anchor about-section")]')
             
             )
-
-
 
             # ------(: Start parsing the store data :)----------
             # Store Name Extraction
@@ -222,7 +173,6 @@ class EtsyStoreScraper:
                     or shop_header.css('h1::text').get()
                     or shop_header.xpath('.//div[contains(@class,"shop-name-and-title-container")]//h1//text()').get()
                 ).strip()
-
             except Exception as e:
                 self.logger.warning(f"⚠️ Error parsing store_name: {e}")
             
@@ -313,10 +263,10 @@ class EtsyStoreScraper:
             try:
                 sales_text = (
                     # First check on below the "Contact shop owner" Button
-                    selector.xpath('//div[contains(@class, "contact-shop-owner-button")]/following-sibling::div[1]/div[1]/text()').get()
+                    selector.xpath('.//div[contains(@class, "contact-shop-owner-button")]/following-sibling::div[1]/div[1]//text()').get()
                     # Then Use fallbacks on header if it fail
                     or shop_header.css('span:contains("Sales")::text').get()
-                    or shop_header.xpath('.//span[contains(., "Sales")]/text()').get()
+                    or shop_header.xpath('.//span[contains(., "Sales")]//text()').get()
                 )
                 store_sales, e = store_data.string_to_int(sales_string=sales_text)
                 if e:
@@ -347,7 +297,7 @@ class EtsyStoreScraper:
         # ---Store Description Extraction---
             try:
                 store_description = (
-                    announcement_section.xpath('string(//span[@data-inplace-editable-text="announcement"])').get()
+                    announcement_section.xpath('string(.//span[@data-inplace-editable-text="announcement"])').get()
                 )
                 store_data.store_description = re.sub(r'\s+', ' ', store_description).strip()
             except Exception as e:
@@ -357,7 +307,7 @@ class EtsyStoreScraper:
             # ---Store Last Updated Extraction---
             try:
                 store_data.store_last_updated = (
-                    announcement_section.xpath('//div[contains(@class, "shop-home-wider-sections")]//div[contains(. , "Last updated on")]/span/text()').get()
+                    announcement_section.xpath('.//div[contains(@class, "shop-home-wider-sections")]//div[contains(. , "Last updated on")]/span/text()').get()
                     or announcement_section.css('span[class*="wt-no-wrap"]::text').get()
                 ).strip()
             except Exception as e:
@@ -367,7 +317,7 @@ class EtsyStoreScraper:
             # ---Store Join data on Etsy--
             try:
                 store_data.on_etsy_since = (
-                    shop_home_about_section.xpath('//div[contains(text(), "On Etsy since ")]/span//text()').get()
+                    shop_home_about_section.xpath('.//div[contains(text(), "On Etsy since ")]/span//text()').get()
                 ).strip()
             except Exception as e:
                 self.logger.warning(f"⚠️ Error parsing on_etsy_since : {e}")
@@ -376,7 +326,7 @@ class EtsyStoreScraper:
             #-- Store "Welcome to our shop!"" text
             try:
                 welcome_to_our_shop_text = (
-                    shop_home_about_section.xpath('string(//span[@data-endpoint="AboutPost"])').get()
+                    shop_home_about_section.xpath('string(.//span[@data-endpoint="AboutPost"])').get()
                 )
                 store_data.welcome_to_our_shop_text = re.sub(r'\s+', ' ', welcome_to_our_shop_text).strip()
 
@@ -389,7 +339,7 @@ class EtsyStoreScraper:
                 # Find facebook url
                 facebook_url = (
                     shop_home_about_section.css('a[aria-label="Facebook"]::attr(href)').get()
-                    or shop_home_about_section.xpath('//a[contains(@href, "facebook")]/@href').get()
+                    or shop_home_about_section.xpath('.//a[contains(@href, "facebook")]/@href').get()
                 )
                 if facebook_url:
                     store_data.facebook_url = facebook_url
@@ -397,7 +347,7 @@ class EtsyStoreScraper:
                 # Find instagram url
                 instagram_url = (
                     shop_home_about_section.css('a[aria-label="Instagram"]::attr(href)').get()
-                    or shop_home_about_section.xpath('//a[contains(@href, "instagram")]/@href').get()
+                    or shop_home_about_section.xpath('.//a[contains(@href, "instagram")]/@href').get()
                 )
                 if instagram_url:
                     store_data.instagram_url = instagram_url
@@ -405,7 +355,7 @@ class EtsyStoreScraper:
                 # Find ticktock url
                 tiktok_url = (
                     shop_home_about_section.css('a[aria-label="TikTok"]::attr(href)').get()
-                    or shop_home_about_section.xpath('//a[contains(@href, "tiktok")]/@href').get()
+                    or shop_home_about_section.xpath('.//a[contains(@href, "tiktok")]/@href').get()
                 )
                 if tiktok_url:
                     store_data.tiktok_url = tiktok_url
@@ -413,7 +363,7 @@ class EtsyStoreScraper:
                 # Find pinterest url
                 pinterest_url = (
                     shop_home_about_section.css('a[aria-label="Pinterest"]::attr(href)').get()
-                    or shop_home_about_section.xpath('//a[contains(@href, "pinterest")]/@href').get()
+                    or shop_home_about_section.xpath('.//a[contains(@href, "pinterest")]/@href').get()
                 )
                 if pinterest_url:
                     store_data.pinterest_url = pinterest_url
@@ -425,14 +375,16 @@ class EtsyStoreScraper:
             # --Store number of products
             try:
                 number_of_store_products = (
-                    shop_home_about_section.xpath('//li//span[contains(text(), "All")]/following-sibling::span/text()').get()
-                ).strip()
+                    selector.xpath('.//li[@aria-selected="true"]/span[contains(text(), "All")]/following-sibling::span//text()').get()
+                    or selector.xpath('.//input[contains(@placeholder, "Search all")]/@placeholder').re(r'\d+')[0]
+                )
 
                 if number_of_store_products:
                     store_data.number_of_store_products = int(number_of_store_products)
             except Exception as e:
                 self.logger.warning(f"⚠️ Error parsing number_of_store_products: {e}")
 
+    
             # Store most_recent_product_urls
             try:
                 store_recent_products_urls = (
@@ -451,9 +403,8 @@ class EtsyStoreScraper:
     
     async def etsy_store_scraper(self) -> Dict[str, Any]:
         self.logger.info("🔎 Starting Etsy Store Scraper...")
-        self.logger.info("🚀 Starting Etsy Store scrape...")
         try:
-            html_content, error_message = await self.fetch_page()
+            html_content, error_message = await self.helpers.fetch_page()
             if error_message:
                 self.logger.error("⚠️ Skipping parsing due to fetch error. Error: " + error_message)
                 return {
@@ -482,7 +433,7 @@ if __name__ == "__main__":
     logger = setup_logging(console_level=logging.DEBUG)
 
     # 🧪 Test URL (can replace with any Etsy Store)
-    url = "https://www.etsy.com/uk/shop/PrioriDigitalStudio?ref=l2-about-shopname&from_page=listing"
+    url = "https://www.etsy.com/shop/EqualEats"
 
     logger.info("🔬 Starting standalone test for EtsyStoreScraper...")
 
@@ -499,7 +450,7 @@ if __name__ == "__main__":
         
         print(result)
         # 💾 Save output
-        output_file = "Store.json"
+        output_file = "store.json"
         with open(output_file, "w", encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=4)
 

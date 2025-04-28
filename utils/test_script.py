@@ -20,7 +20,7 @@ logger = setup_logging()
 ua = UserAgent()
 
 # Base URL for categories
-base_url = "https://www.etsy.com/uk/c/jewelry?explicit=1&instant_download=true&ship_to=GB&order=highest_reviews&page="
+base_url = "https://www.etsy.com/c/jewelry?explicit=1&instant_download=true&ship_to=GB&order=highest_reviews&page="
 already_used = set()
 
 # Create directories for storing HTML and results
@@ -39,21 +39,62 @@ class ScraperTester:
         
     def get_headers(self, user_agent):
         """Generate request headers with given user agent."""
-        return {
-                'User-Agent': f'{user_agent}',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Sec-Fetch-User': '?1',
-                'Pragma': 'no-cache',
-                'Cache-Control': 'no-cache',
-            }
+        # return {
+        #         'User-Agent': f'{user_agent}',
+        #         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        #         'Accept-Language': 'en-US,en;q=0.5',
+        #         'DNT': '1',
+        #         'Connection': 'keep-alive',
+        #         'Upgrade-Insecure-Requests': '1',
+        #         'Sec-Fetch-Dest': 'document',
+        #         'Sec-Fetch-Mode': 'navigate',
+        #         'Sec-Fetch-Site': 'none',
+        #         'Sec-Fetch-User': '?1',
+        #         'Pragma': 'no-cache',
+        #         'Cache-Control': 'no-cache',
+        #     }
+
+    #     return {
+  
+    #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0',
+    #     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    #     'Accept-Language': 'en-US,en;q=0.5',
+    #     # 'Accept-Encoding': 'gzip, deflate, br, zstd',
+    #     'DNT': '1',
+    #     'Sec-GPC': '1',
+    #     'Connection': 'keep-alive',
+    #     'Upgrade-Insecure-Requests': '1',
+    #     'Sec-Fetch-Dest': 'document',
+    #     'Sec-Fetch-Mode': 'navigate',
+    #     'Sec-Fetch-Site': 'none',
+    #     'Sec-Fetch-User': '?1',
+    #     'Priority': 'u=0, i',
+    #     'Pragma': 'no-cache',
+    #     'Cache-Control': 'no-cache',
+    # }
     
+
+    headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    # 'Accept-Encoding': 'gzip, deflate, br, zstd',
+    'Connection': 'keep-alive',
+    'Cookie': 'uaid=bYLctygEEiT8-9zfqHMX5vQmeZ9jZACCDIbEABhdrVSamJmiZKUU6Rvm4ZgYbx6Q41uVnuJhYFSWmWoZlpuUX1BVrFTLAAA.; user_prefs=2-jl6r0xIZNjh60_WV8N6zxneoJjZACCDIbEABgdreTuFKCkk1eak6OjlJqn6-6kpKMEIsAiRhAKFxHLAAA.; fve=1744855377.0; _fbp=fb.1.1744855377039.3044595180781198; exp_ebid=m=UIJ%2BKW7tIYMoxxex1SeY8PmAaz6REUHanY1VRK2SfcI%3D,v=Kvus9PVFNfQPJcWnBTbnzjbsU_gyfEZt; datadome=fIPp_MqZPaxckAIEUWP5j7E1HTGxzTx2kWR5hVHOBlJ8IlVohAG8iq5OjDMFOCjj4CPaciYLYoaIx5p9OeGOYveS5MZl9L64fIF7inH_d_6dyi_gjWGsFnlK_CuPLhfv; ua=531227642bc86f3b5fd7103a0c0b4fd6; _gcl_au=1.1.241807951.1744855380; _ga_KR3J610VYM=GS1.1.1745236246.17.0.1745236246.60.0.0; _ga=GA1.1.1564093969.1744855382; lantern=dc0c732b-b507-44fa-ab0e-55bb98bd6153; _ga_WSQNWKVGKE=GS1.1.1744884186.1.0.1744884237.0.0.0; _ga_0X0TDCYXJK=GS1.1.1744983146.4.1.1744984914.0.0.0; _ga_4H5M4GDE3Q=GS1.1.1744979462.2.1.1744980932.0.0.0',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'DNT': '1',
+    'Sec-GPC': '1',
+    'Priority': 'u=0, i',
+    'Pragma': 'no-cache',
+    'Cache-Control': 'no-cache',
+    # Requests doesn't support trailers
+    # 'TE': 'trailers',
+}
+
     def generate_category_urls(self):
         """Generate category URLs for testing."""
         urls = []
@@ -100,7 +141,8 @@ class ScraperTester:
                 category_api_url = f"{self.api_base_url}/category"
                 payload = {
                     "url": url,
-                    "timeout": 30
+                    "timeout": 30,
+                    'proxy': "http://germanproxy42de:tyF8SSTx27jg@168.119.244.147:13864"
                 }
                 
                 try:
@@ -169,7 +211,8 @@ class ScraperTester:
                 store_api_url = f"{self.api_base_url}/store"
                 payload = {
                     "url": url,
-                    "timeout": 30
+                    "timeout": 30,
+                    'proxy': "http://germanproxy42de:tyF8SSTx27jg@168.119.244.147:13864"
                 }
                 
                 try:
@@ -272,7 +315,7 @@ class ScraperTester:
         
         # Save the JSON result
         with open(f"utils/debug/reports/category_result_{page_data['page_num']}.json", "w", encoding="utf-8") as f:
-            json.dump(category_data, f, indent=4)
+            json.dump(category_data, f, indent=4, ensure_ascii=False)
         
         return result
     
@@ -307,7 +350,7 @@ class ScraperTester:
         
         # Save the JSON result
         with open(f"utils/debug/reports/store_result_{store_data['store_name']}.json", "w", encoding="utf-8") as f:
-            json.dump(api_result, f, indent=4)
+            json.dump(api_result, f, indent=4, ensure_ascii=False)
         
         return result
     
@@ -321,7 +364,7 @@ class ScraperTester:
         start_time = time.time()
         
         # Create a connection pool for concurrent requests
-        connector = aiohttp.TCPConnector(limit=100)  # Limit concurrent connections
+        connector = aiohttp.TCPConnector(limit=5)  # Limit concurrent connections
         async with aiohttp.ClientSession(connector=connector) as session:
             # Create tasks for all category URLs
             tasks = []
@@ -445,8 +488,8 @@ class ScraperTester:
 
 async def main():
     # Create tester instance - specify your FastAPI server URL here
-    api_base_url = "https://etsy-com-scraper.onrender.com"  # Change this if your API is on a different host/port
-    tester = ScraperTester(api_base_url=api_base_url, total_categories=1, max_stores=1)
+    api_base_url = "http://65.109.59.224:8010"  # Change this if your API is on a different host/port
+    tester = ScraperTester(api_base_url=api_base_url, total_categories=15, max_stores=0)
     
     # Run category test
     category_time = await tester.run_category_test()

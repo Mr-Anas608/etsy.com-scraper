@@ -1,0 +1,145 @@
+{
+    "headers_rotation": [
+      {
+        "id": "chrome_win_desktop_1",
+        "description": "Chrome 135 - Windows 10 Desktop (Common Config)",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Sec-CH-UA": "\"Google Chrome\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",
+          "Sec-CH-UA-Full-Version-List": "\"Google Chrome\";v=\"135.0.7049.96\", \"Not-A.Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"135.0.7049.96\"",
+          "Sec-CH-UA-Platform": "\"Windows\"",
+          "Sec-CH-UA-Arch": "\"x86\"",
+          "Sec-CH-UA-Bitness": "\"64\"",
+          "Sec-CH-UA-Mobile": "?0",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "same-origin",
+          "Sec-Fetch-User": "?1",
+          "Upgrade-Insecure-Requests": "1",
+          "Priority": "u=0, i"
+        }
+      },
+      {
+        "id": "firefox_win_desktop_1",
+        "description": "Firefox 137 - Windows 10 Desktop",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "none",
+          "Sec-Fetch-User": "?1",
+          "DNT": "1",
+          "Sec-GPC": "1",
+          "Upgrade-Insecure-Requests": "1",
+          "Priority": "u=0"
+        }
+      },
+      {
+        "id": "edge_win_desktop_1",
+        "description": "Edge 135 - Windows 11 Desktop (Post-Captcha Pattern)",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Sec-CH-UA": "\"Microsoft Edge\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",
+          "Sec-CH-UA-Full-Version-List": "\"Microsoft Edge\";v=\"135.0.3179.85\", \"Not-A.Brand\";v=\"8.0.0.0\", \"Chromium\";v=\"135.0.7049.96\"",
+          "Sec-CH-UA-Platform": "\"Windows\"",
+          "Sec-CH-UA-Mobile": "?0",
+          "Sec-CH-UA-Arch": "\"x86\"",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "same-origin",
+          "Referer": "https://www.etsy.com/",
+          "Upgrade-Insecure-Requests": "1"
+        }
+      },
+      {
+        "id": "chrome_mac_desktop_1",
+        "description": "Chrome 135 - macOS Desktop (M1 Chip)",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+          "Sec-CH-UA-Arch": "\"arm\"",
+          "Sec-CH-UA-Bitness": "\"64\"",
+          "Sec-CH-UA-Platform": "\"macOS\"",
+          "Sec-CH-UA-Platform-Version": "\"12.6.0\"",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "Accept-Language": "en-US,en;q=0.9"
+        }
+      },
+      {
+        "id": "firefox_linux_desktop_1",
+        "description": "Firefox 137 - Linux Desktop",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:137.0) Gecko/20100101 Firefox/137.0",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "none",
+          "DNT": "1",
+          "Upgrade-Insecure-Requests": "1"
+        }
+      },
+      {
+        "id": "chrome_android_mobile_1",
+        "description": "Chrome 135 - Android 13 Mobile",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Mobile Safari/537.36",
+          "Sec-CH-UA-Mobile": "?1",
+          "Sec-CH-UA-Platform": "\"Android\"",
+          "Sec-CH-UA-Model": "\"SM-S901B\"",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+          "Accept-Language": "en-US,en;q=0.9"
+        }
+      },
+      {
+        "id": "edge_mac_desktop_1",
+        "description": "Edge 135 - macOS Desktop",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36 Edg/135.0.0.0",
+          "Sec-CH-UA": "\"Microsoft Edge\";v=\"135\", \"Not-A.Brand\";v=\"8\", \"Chromium\";v=\"135\"",
+          "Sec-CH-UA-Platform": "\"macOS\"",
+          "Sec-CH-UA-Arch": "\"x86\"",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        }
+      },
+      {
+        "id": "firefox_ios_mobile_1",
+        "description": "Firefox 137 - iOS Mobile",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/137.0 Mobile/15E148 Safari/605.1.15",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.5",
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Site": "none",
+          "DNT": "1",
+          "Upgrade-Insecure-Requests": "1"
+        }
+      },
+      {
+        "id": "chrome_linux_desktop_1",
+        "description": "Chrome 135 - Linux Desktop",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+          "Sec-CH-UA-Platform": "\"Linux\"",
+          "Sec-CH-UA-Arch": "\"x86\"",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
+        }
+      },
+      {
+        "id": "samsung_internet_android_1",
+        "description": "Samsung Internet 24 - Android Mobile",
+        "headers": {
+          "User-Agent": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/24.0 Chrome/116.0.0.0 Mobile Safari/537.36",
+          "Sec-CH-UA-Mobile": "?1",
+          "Sec-CH-UA-Platform": "\"Android\"",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
+        }
+      }
+    ]
+  }

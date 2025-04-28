@@ -1,57 +1,150 @@
+import asyncio
 from fake_useragent import UserAgent
+import httpx
+import sys
+import os
 import random
-import requests
-from httpx import AsyncClient
-import sys, os
+import time
+import aiohttp
+from typing import List, Dict, Any, Optional
 
 # Ensure the project's root directory is in the Python path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from logs.custom_logging import setup_logging 
+import logging
+import json
 
-ua = UserAgent()
-    #----FireFox----
+logger = setup_logging(console_level=logging.DEBUG)
+
+# Corrected proxies (fix the typo and format for httpx)
+proxies = {
+    'http://': 'http://germanproxy42de:tyF8SSTx27jg@168.119.244.147:13864',
+    'https://': 'http://germanproxy42de:tyF8SSTx27jg@168.119.244.147:13864',
+}
+# proxy_url = "http://germanproxy42de:tyF8SSTx27jg@168.119.244.147:13864"
+
+# ✅ Using Main Gateway:
+proxy_url = "http://5.79.73.131:13010"
+
+# # ✅ Using 3 Minutes Gateway (first one):
+# proxy_url = "http://173.208.150.242:15001"
+
+# # ✅ Using 15 Minutes Gateway (second one):
+proxy_url = "http://163.172.58.253:16001"
+
+# # ✅ Using Residential Proxy:
+# proxy_url = "http://204.12.211.114:17088"
 
 
-already_used = set()
-for i in range(1, 2):
-    user_agent = ua.firefox
-    if user_agent in already_used:
-        print(f"UserAgent {user_agent} has already been used. Skipping...")
-        continue
-    already_used.add(user_agent)
-    # Category header for analysis
-    header = {
-                'User-Agent': f'{user_agent}',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.5',
-                # 'Accept-Encoding': 'gzip, deflate, br, zstd',
-                'DNT': '1',
-                'Sec-GPC': '1',
-                'Connection': 'keep-alive',
-                'Cookie': 'datadome=7BGx1wHedSA3gAlIJFKZ7iTxjBnjoWamCWMNAM1JQD8COR_r8Q~aE~BLkDkGVJoMJtwajKIY8M418h4HGMCe0u_B8Mk3xjKVUoQLq0rikTl6wpl5I8M9FVMqwbBLK3ox; exp_ebid=m=QBjT03EiZGVcyHG5XE5ZIQzjpe6urrN92Xjk9tW7uhY%3D,v=jodar_ZH7cld3caXudhygNAWGakMczD-; uaid=sY5osjbQl9TWGFA2582FdAuwwhhjZACCDJa7GjC6Wqk0MTNFyUopI93JIsLcwL8qsyzFqNwkzd3T3C-g2NE_MN49QKmWAQA.; user_prefs=Rrg0tJ5QGTvcoGomJSUYSzsVZkNjZACCDJa7GjA6WsndKUBJJ680J0dHKTVP191JSUcJRIBFjCAULiKWAQA.; fve=1745149224.0; _fbp=fb.1.1745149224810.5743244604227888; ua=531227642bc86f3b5fd7103a0c0b4fd6; _gcl_au=1.1.348421385.1745149225; _ga_KR3J610VYM=GS1.1.1745149225.1.1.1745149379.60.0.0; _ga=GA1.1.1946022003.1745149225; __adal_ses=*; __adal_id=adf633bd-ee1f-4064-97ca-5d9bc06f8ac4.1745149226.1.1745149379.1745149226.b1169c51-0bd5-44fb-8b47-86df1def8cdd; __adal_ca=so%3Ddirect%26me%3Dnone%26ca%3Ddirect%26co%3D%28not%2520set%29%26ke%3D%28not%2520set%29; __adal_cw=1745149225510; _pin_unauth=dWlkPU5UYzVNbUZqTkRRdE1ERTNOQzAwTTJJd0xXSTJNVFl0TmprME56WmxNVEl4T1RCaw',
-                'Upgrade-Insecure-Requests': '1',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Sec-Fetch-User': '?1',
-                'Priority': 'u=0, i',
-                'Pragma': 'no-cache',
-                'Cache-Control': 'no-cache',
-                # Requests doesn't support trailers
-                # 'TE': 'trailers',
-            }
+async def check_proxy(session: aiohttp.ClientSession = None) -> Optional[str]:
+    """Check if the proxy is working"""
+    try:
+        if session:
+            async with session.get('http://www.httpbin.org/ip', proxy=proxy_url) as response:
+                if response.status == 200:
+                    output = json.loads(await response.text())
+                    proxy = output.get("origin")
+                    logger.debug(f"{proxy} Proxy is working")
+                    return proxy_url, proxy
+                else:
+                    logger.error(f"Proxy is not working, Status Code: {response.status}")
+                    return None, None
+        else:
+            async with aiohttp.ClientSession() as session:
+                logger.warning("Creating new session for proxy check")
+                async with session.get('http://www.httpbin.org/ip', proxy=proxy_url) as response:
+                    if response.status == 200:
+                        output = json.loads(await response.text())
+                        proxy = output.get("origin")
+                        logger.debug(f"{proxy} Proxy is working")
+                        return proxy_url, proxy
+                    else:
+                        logger.error(f"Proxy is not working, Status Code: {response.status}")
+                        return None, None
+                    
+    except Exception as e:
+        logger.error(f"Error checking proxy: {e}")
+        return None, None
     
-    url = f"https://www.etsy.com/uk/c/jewelry?explicit=1&instant_download=true&ship_to=GB&order=highest_reviews&page={i}"
 
-    response = requests.get(url, headers=header)
+async def fetch_page(session: aiohttp.ClientSession, page: int, headers: dict, proxy:str = None) -> Optional[str]:
+    """Make a request with staggered delay"""
 
-    print(f"Response Code: {response.status_code}")
-    print(f"Length of response html is {len(response.text)}")
+    params = {'ref': 'pagination', 'page': str(page)}
+    url = f"https://www.etsy.com/c/jewelry?explicit=1&instant_download=true&ship_to=GB&order=highest_reviews&page={page}"
 
-    if len(response.text) < 2000:
-        print(f"Failed to fetch complete html, Saving for debug...")
-        with open(f"utils/debug/Page {i}.html", "w", encoding="utf-8") as f:
-            f.write(str(response.text))
+    try:
+        start_time = time.perf_counter()
+        if proxy:
+            response = await session.get(url, headers=headers, params=params, proxy=proxy)
+        else:
+            response = await session.get(url, headers=headers, params=params)
+            
+        end_time = time.perf_counter()
+        duration = end_time - start_time
+        logger.info(f"Page {page} - Status: {response.status}, Length: {len(await response.text())}, - Time taken: {duration:.4f} seconds")
 
-    with open(f"utils/debug/Page {i}.html", "w", encoding="utf-8") as f:
-        f.write(str(response.text))
+        html_content = await response.text() # await here
+        if len(html_content) < 2000:
+            logger.info(f"Short response for page {page} - possible block")
+            with open(f"utils/debug/Page_{page}_Error.html", "w", encoding="utf-8") as f:
+                f.write(html_content)
+        else:
+            with open(f"utils/debug/Page_{page}_Success.html", "w", encoding="utf-8") as f:
+                f.write(html_content)
+        return html_content
+    except aiohttp.ClientError as e:
+        logger.error(f"Error on page {page}: {str(e)}")
+        return None
+    except asyncio.TimeoutError:
+        logger.error(f"Timeout error on page {page}")
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error on page {page}: {e}")
+        return None
+
+async def main():
+    """Main async function to run requests with staggered delays"""
+    start_overall = time.perf_counter()
+    base_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Cache-Control": "max-age=0",
+    }
+    
+    async with aiohttp.ClientSession() as session:
+    
+        tasks = []
+        for i in range(50):
+            proxy_url, proxy = await check_proxy(session)
+            if proxy_url:
+                logger.debug(f"Using proxy: {proxy} from this url {proxy_url}")
+                task = asyncio.create_task(fetch_page(session, i + 1, headers=base_headers, proxy=proxy_url))
+            else:
+                logger.warning("No proxy available, using default headers")
+
+                task = asyncio.create_task(fetch_page(session, i + 1, headers=base_headers))
+
+            tasks.append(task)
+
+            if i < 99:
+                delay = random.uniform(1, 3)
+                await asyncio.sleep(delay)
+
+        await asyncio.gather(*tasks)
+        end_overall = time.perf_counter()
+        duration_overall = end_overall - start_overall
+        logger.info(f"Total time taken: {duration_overall:.4f} seconds")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
